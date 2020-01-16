@@ -14,16 +14,17 @@ var app = express();
 
 const http = require('http').Server(app);
 const io = require('socket.io')(http);
-io.origins('http://localhost:3000');
+io.origins('*:*');
 
-const whitelist = ['http://localhost:3000'];
+const whitelist = ['http://localhost:3000', 'http://localhost:3030'];
 
 const corsOptions = {
   credentials: true, // This is important.
   origin: (origin, callback) => {
-    if(whitelist.includes(origin))
-      return callback(null, true)
-      callback(new Error('Not allowed by CORS'));
+    if(whitelist.includes(origin)) {
+			return callback(null, true)
+		}
+		callback(new Error('Not allowed by CORS'));
   }
 }
 

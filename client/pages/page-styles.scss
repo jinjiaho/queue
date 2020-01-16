@@ -1,0 +1,79 @@
+$dark: #160F29;
+$light: #E6E6E6;
+$teal-dark: #246A73;
+$teal-light: #368F8B;
+$beige-light: #F3DFC1;
+$beige-dark: #DDBEA8;
+
+
+body {
+    margin: 0;
+    font-family: sans-serif;
+}
+
+#__next {
+    display: block;
+}
+
+nav {
+    background: $teal-dark;
+    padding: 1rem 2rem 0.5rem;
+    color: $light;
+    font-size: x-large;
+}
+
+main {
+    background: $dark;
+    color: $light;
+    padding: 1rem 2rem;
+    min-height: calc(100vh - 7.5rem);
+
+    /* match width of embedded video, capped to screen width */
+    & .component {
+        width: 560px;
+        max-width: 100%;
+    }
+
+    & .queue-box {
+        padding: 1rem 0;
+
+        & .queue-item {
+            background: $teal-dark;
+            margin: 0.5rem 0;
+            padding: 0.5rem;
+        }
+    }
+
+}
+
+footer {
+    background: $teal-dark;
+    color: lighten($light, 10%);
+    padding: 0.75rem 2rem;
+    font-size: small;
+}
+
+input {
+    width: 100%;
+    max-width: 540px;
+    padding: 0.5rem;
+    border-radius: 0.25rem;
+    margin: 0 0 0.5rem;
+
+    &:focus {
+        outline-color: lighten($teal-dark, 10%);
+    }
+}
+
+button, input[type=submit] {
+    padding: 0.5rem 0.75rem;
+    border-radius: 0.25rem;
+    background: $teal-dark;
+    color: $light;
+    border: $teal-dark;
+    font-size: medium;
+
+    &:focus {
+        outline: lighten($teal-dark, 10%);
+    }
+}
