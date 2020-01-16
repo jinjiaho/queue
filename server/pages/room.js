@@ -22,7 +22,7 @@ class RoomPage extends React.Component {
         }
         
         this.socket.on("RefreshQueue", data => {
-            this.state.items = data;
+            this.setState({ items: data });
         })
 
         // socket.emit("AddToQueue", { url: "https://www.youtube.com/watch?v=WNQ0RN4c8ZY" });

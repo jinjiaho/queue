@@ -33,14 +33,17 @@ app.use(gracefulExit.middleware(app));
 
 let testQ = "8FZBwj81gGY,Mw7Gryt-rcc,kTzmVgGG5Bw";
 let queue = []
+
+getVideoInfo(testQ).then(q => {
+	queue = q;
+	io.emit("RefreshQueue", queue);
+}).catch(err => {
+	throw new Error(err);
+})
+
 io.on("connection", socket => {
 	console.log('a user connected');
-	getVideoInfo(testQ).then(q => {
-		queue = q;
-		io.emit("RefreshQueue", queue);
-	}).catch(err => {
-		throw new Error(err);
-	})
+	io.emit("RefreshQueue", queue);
 
 	socket.on("AddToQueue", function(data) {
 		console.log('AddToQueue', data);
@@ -121,7 +124,7 @@ function getVideoInfo(videos) {
 		axios.get(`https://www.googleapis.com/youtube/v3/videos?id=${videos}&key=${process.env.GOOGLE_API_KEY}&part=snippet`)
 		.then(response => {
 			let result = response.data.items;
-			// console.log(result);
+			console.log('get video info result:', result);
 			let vidIds = videos.split(',');
 			for (let i=0;i<result.length;i++) {
 				queue.push({
@@ -138,10 +141,19 @@ function getVideoInfo(videos) {
 }
 
 function extractVideoId(url) {
-	let splitQueries = url.split('&');
-	for (let section of splitQueries) {
-		if (section.includes('v=')) {
-			return section.split('v=')[1];
+	// shortened urls have different structure
+	if (url.includes('youtu.be')) {
+		let splitUrl = url.split('/');
+		// remove queries
+		let lastItem = splitUrl[splitUrl.length-1];
+		let removedQueries = lastItem.split('?')[0];
+		return removedQueries;
+	} else {
+		let splitQueries = url.split('&');
+		for (let section of splitQueries) {
+			if (section.includes('v=')) {
+				return section.split('v=')[1];
+			}
 		}
 	}
 }
