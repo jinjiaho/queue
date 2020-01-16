@@ -1,0 +1,48 @@
+$primary: #160F29;
+$secondary-dark: #246A73;
+$secondary-light: #368F8B;
+$tertiary-light: #F3DFC1;
+$tertiary-dark: #DDBEA8;
+
+body {
+    margin: 0;
+    font-family: sans-serif;
+}
+
+#__next {
+    display: block;
+}
+
+nav {
+    background: $secondary-light;
+    padding: 1rem 2rem 0.5rem;
+    color: lighten($tertiary-light, 10%);
+    font-size: x-large;
+}
+
+main {
+    background: $primary;
+    color: lighten($tertiary-light, 10%);
+    padding: 1rem 2rem;
+    min-height: calc(100vh - 7.5rem);
+
+    & .queue-box {
+        padding: 1rem 0;
+        width: 560px;
+
+        & .queue-item {
+            background: $secondary-dark;
+            margin: 0.5rem 0;
+            padding: 0.5rem;
+        }
+    }
+
+    
+}
+
+footer {
+    background: $secondary-dark;
+    color: lighten($tertiary-light, 10%);
+    padding: 0.75rem 2rem;
+    font-size: small;
+}
