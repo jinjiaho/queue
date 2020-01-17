@@ -17,6 +17,7 @@ class RoomPage extends React.Component {
     constructor(props) {
         super(props)
         this.state = {
+            nowPlaying: '',
             items: []
         }
 
@@ -24,6 +25,9 @@ class RoomPage extends React.Component {
         this.socket = socketIOClient.connect(endpoint)
         
         this.socket.on("RefreshQueue", data => {
+            if (data[0] && data[0].id !== this.state.nowPlaying) {
+                this.setState({ nowPlaying: data[0].id })
+            }
             this.setState({ items: data });
         })
 
@@ -32,7 +36,11 @@ class RoomPage extends React.Component {
     nextSong() {
         let currentQueue = this.state.items;
         this.setState({ items: currentQueue.shift() });
-        console.log(this.state.items);
+    }
+
+    /* Move this video to the top of the queue and play it immediately. */
+    onClickItem(index) {
+        this.socket.emit("PlayNow", index)
     }
 
     componentDidMount() {
@@ -50,11 +58,10 @@ class RoomPage extends React.Component {
 
     render() {
         // console.log(Queue.items);
-        let nowPlaying = (this.state.items.length > 0) ? this.state.items[0].id : ''
         return (
             <Layout>
-                <YoutubeEmbedVideo id="now-playing" videoId={nowPlaying} autoplay />
-                <QueueBox queue={this.state.items} />
+                <YoutubeEmbedVideo id="now-playing" videoId={this.state.nowPlaying} autoplay />
+                <QueueBox queue={this.state.items} onClickItem={this.onClickItem.bind(this)} />
             </Layout>
         )
     }

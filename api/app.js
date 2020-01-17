@@ -59,12 +59,8 @@ io.on("connection", socket => {
 			})
 		} else if (data.vidId) {
 			let id = data.vidId;
-			getVideoInfo(id).then(q => {
-				queue = [...queue, ...q];
-				io.emit("RefreshQueue", queue);
-			}).catch(err => {
-				throw new Error(err);
-			})
+			queue = addVideoToQueue(io, queue, id)
+			
 		}
 	});
 
@@ -79,6 +75,14 @@ io.on("connection", socket => {
 			// console.log(searchResults);
 			io.emit("FoundVideos", searchResults);
 		})
+	})
+
+	socket.on("PlayNow", function(index) {
+		let toPlayNow = queue[index];
+		queue.splice(index, 1);
+		let newQ = [toPlayNow, ...queue.slice(1)];
+		queue = newQ;
+		io.emit("RefreshQueue", queue);
 	})
 
 	socket.on("disconnect", () => console.log("Client disconnected"));
@@ -128,7 +132,6 @@ module.exports = app;
 function addVideoToQueue(socket, queue, video) {
 	getVideoInfo(video).then(q => {
 		queue = [...queue, ...q];
-		// console.log(queue);
 		socket.emit("RefreshQueue", queue);
 	}).catch(err => {
 		throw new Error(err);

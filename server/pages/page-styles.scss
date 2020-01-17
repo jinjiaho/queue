@@ -48,16 +48,27 @@ main {
         & .scroll-view {
             max-height: 40vh;
             overflow-y: auto;
+            display: flex;
+            flex-direction: column;
+            margin-top: 1rem;
         }
 
         & .queue-item {
             background: $secondary-dark;
-            margin: 0.5rem 0;
+            margin: 0 0 0.75rem;
             padding: 0.5rem;
+            cursor: pointer;
+
+            &:hover {
+                background: $secondary-light;
+                box-shadow: 0 0 3px 0px $secondary-dark;
+            }
+
+            &:last-child {
+                margin-bottom: 0;
+            }
         }
     }
-
-    
 }
 
 footer {

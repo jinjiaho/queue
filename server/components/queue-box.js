@@ -6,7 +6,7 @@ function QueueBox(props) {
       <div className="scroll-view">
         {props.queue.map((x, i) => {
           if (i !== 0) {
-            return (<QueueItem key={i} title={x.title} />)
+            return (<QueueItem key={i} index={i} title={x.title} onClick={props.onClickItem} />)
           }
         })}
       </div>

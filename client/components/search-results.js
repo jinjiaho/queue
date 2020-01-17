@@ -1,7 +1,6 @@
 import SearchResultItem from './search-result-item'
 
 function SearchResults(props) {
-  console.log(props.vidId);
   return (
     <div className="component" id="search-results">
       {props.items ? 
