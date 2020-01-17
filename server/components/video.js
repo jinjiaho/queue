@@ -1,7 +1,17 @@
+import React from 'react'
 import YoutubeEmbedVideo from 'youtube-embed-video'
 
-function Video(props) {
-    return <YoutubeEmbedVideo videoId={props.videoId} autoplay={props.autoplay}/>
+class Video extends React.Component {
+    constructor(props) {
+        super(props)
+        this.state = {
+            vidId: props.videoId
+        }
+    }
+
+    render() {
+        return (<YoutubeEmbedVideo videoId={this.state.vidId} autoplay={1} />)
+    }
 }
 
 export default Video

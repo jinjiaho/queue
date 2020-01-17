@@ -1,30 +1,36 @@
 import React from "react"
+import SearchResults from './search-results'
 
 class AddVideoForm extends React.Component {
     constructor(props) {
         super(props)
         this.state = {
-            url: ''
+            url: '',
+            targetUrl: '',
+            searchTerms: '',
+            searchResults: []
         }
-        this.socket = props.socket;
     }
 
     onChange = (e) => {
-        let target = e.target
-        let value = target.value
-        this.setState({ url: value })
+        this.setState({ searchTerms: e.target.value.trim() })
     }
 
     onClickSubmit = (e) => {
-        this.props.onClickSubmit({ url: this.state.url })
+        e.preventDefault();
+        this.props.onClickSubmit(this.state.searchTerms)
     }
 
     render() {
         return (
             <div className="component">
                 <h2>Add a video to the queue:</h2>
-                <input onChange={(e) => this.onChange(e)} />
-                <button className="button" onClick={(e) => this.onClickSubmit(e)} >Submit video request</button>
+                <form className="search-form" onSubmit={this.onClickSubmit}>
+                    <input name="search_query" onChange={(e) => this.onChange(e)} value={this.state.searchTerms} />
+                    <button type="submit" className="button">Search</button>
+                </form>
+                
+                <SearchResults items={this.state.searchResults} onClickItem={this.props.onSelectVideo} />
             </div>
         )
     }

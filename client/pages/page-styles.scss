@@ -27,20 +27,54 @@ main {
     color: $light;
     padding: 1rem 2rem;
     min-height: calc(100vh - 7.5rem);
-
-    /* match width of embedded video, capped to screen width */
-    & .component {
-        width: 560px;
-        max-width: 100%;
-    }
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(40%, 1fr));
+    grid-gap: 3rem;
 
     & .queue-box {
-        padding: 1rem 0;
 
         & .queue-item {
             background: $teal-dark;
             margin: 0.5rem 0;
             padding: 0.5rem;
+        }
+    }
+
+    & .search-form {
+        display: flex;
+
+        & input {
+            margin-right: 0.25rem;
+        }
+    }
+
+    & #search-results {
+        max-height: 50vh;
+        overflow-y: auto;
+
+        & .search-result-item {
+            display: grid;
+            grid-template-columns: 30% 66%;
+            margin-bottom: 0.5rem;
+            grid-gap: 1rem;
+            cursor: pointer;
+
+            &:hover {
+                background: $teal-dark;
+                border: 1px solid $teal-light;
+            }
+
+            & h4 {
+                margin-top: 1rem;
+            }
+
+            & img {
+                width: 100%;
+            }
+
+            & p {
+                font-size: small;
+            }
         }
     }
 
@@ -70,10 +104,17 @@ button, input[type=submit] {
     border-radius: 0.25rem;
     background: $teal-dark;
     color: $light;
-    border: $teal-dark;
+    border: 1px solid $teal-dark;
     font-size: medium;
+    margin-bottom: 0.5rem;
+    cursor: pointer;
 
     &:focus {
-        outline: lighten($teal-dark, 10%);
+        outline: none;
+        border: 1px dotted lighten($teal-light, 10%);
+    }
+
+    &:active {
+        background: lighten($teal-dark, 10%);
     }
 }
