@@ -43,7 +43,7 @@ main {
 
     & .queue-box {
         padding: 1rem 0;
-        width: 640px;
+        width: minmax(calc(100% - 64px), 640px);
 
         & .scroll-view {
             max-height: 40vh;

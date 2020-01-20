@@ -10,15 +10,20 @@ class AddVideoForm extends React.Component {
             searchTerms: '',
             searchResults: []
         }
+
     }
 
     onChange = (e) => {
-        this.setState({ searchTerms: e.target.value.trim() })
+        this.setState({ searchTerms: e.target.value })
     }
 
     onClickSubmit = (e) => {
         e.preventDefault();
-        this.props.onClickSubmit(this.state.searchTerms)
+        this.props.onClickSubmit(this.state.searchTerms.trim())
+    }
+
+    clearSearchResults = () => {
+        this.setState({ searchResults: [] });
     }
 
     render() {
@@ -26,11 +31,17 @@ class AddVideoForm extends React.Component {
             <div className="component">
                 <h2>Add a video to the queue:</h2>
                 <form className="search-form" onSubmit={this.onClickSubmit}>
-                    <input name="search_query" onChange={(e) => this.onChange(e)} value={this.state.searchTerms} />
+                    <input 
+                        name="search_query" 
+                        onChange={(e) => this.onChange(e)} 
+                        value={this.state.searchTerms} 
+                        placeholder="Find a video from YouTube" />
                     <button type="submit" className="button">Search</button>
                 </form>
                 
-                <SearchResults items={this.state.searchResults} onClickItem={this.props.onSelectVideo} />
+                <SearchResults 
+                    items={this.state.searchResults} 
+                    onClickItem={this.props.onSelectVideo} />
             </div>
         )
     }

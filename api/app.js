@@ -21,29 +21,30 @@ const whitelist = ['http://localhost:3000', 'http://localhost:3030'];
 const corsOptions = {
   credentials: true, // This is important.
   origin: (origin, callback) => {
-    if(whitelist.includes(origin)) {
-			return callback(null, true)
-		}
-		callback(new Error('Not allowed by CORS'));
+    // if (whitelist.includes(origin)) {
+		return callback(null, true)
+	// }
+	// callback(new Error('Not allowed by CORS'));
   }
 }
 
 app.use(cors(corsOptions));
 app.use(gracefulExit.middleware(app));
 
-let testQ = "8FZBwj81gGY,Mw7Gryt-rcc,kTzmVgGG5Bw";
-let queue = []
+let testQ = "TxHm_Qm4e4k,Mw7Gryt-rcc,kTzmVgGG5Bw";
+let Queue = []
 
 getVideoInfo(testQ).then(q => {
-	queue = q;
-	io.emit("RefreshQueue", queue);
+	Queue = q;
+	io.emit("RefreshQueue", Queue);
 }).catch(err => {
 	throw new Error(err);
 })
 
 io.on("connection", socket => {
-	console.log('a user connected');
-	io.emit("RefreshQueue", queue);
+	// console.log('a user connected');
+	io.emit("RefreshQueue", Queue);
+	// console.log(http.address())
 
 	socket.on("AddToQueue", function(data) {
 		console.log('AddToQueue', data);
@@ -51,38 +52,31 @@ io.on("connection", socket => {
 		if (data.url) {
 			let url = data.url;
 			let vid = extractVideoId(url);
-			getVideoInfo(vid).then(q => {
-				queue = [...queue, ...q];
-				io.emit("RefreshQueue", queue);
-			}).catch(err => {
-				throw new Error(err);
-			})
+			addVideoToQueue(vid);
 		} else if (data.vidId) {
 			let id = data.vidId;
-			queue = addVideoToQueue(io, queue, id)
-			
+			addVideoToQueue(id)
 		}
 	});
 
 	socket.on("Next", function() {
-		queue.shift();
-		console.log('Next Song:', queue);
-		io.emit("RefreshQueue", queue);
+		Queue.shift();
+		// console.log('Next Song:', Queue);
+		io.emit("RefreshQueue", Queue);
 	})
 
 	socket.on("Search", function(query) {
 		searchYoutube(query).then(searchResults => {
-			// console.log(searchResults);
 			io.emit("FoundVideos", searchResults);
 		})
 	})
 
 	socket.on("PlayNow", function(index) {
-		let toPlayNow = queue[index];
-		queue.splice(index, 1);
-		let newQ = [toPlayNow, ...queue.slice(1)];
-		queue = newQ;
-		io.emit("RefreshQueue", queue);
+		let toPlayNow = Queue[index];
+		Queue.splice(index, 1);
+		let newQ = [toPlayNow, ...Queue.slice(1)];
+		Queue = newQ;
+		io.emit("RefreshQueue", Queue);
 	})
 
 	socket.on("disconnect", () => console.log("Client disconnected"));
@@ -129,10 +123,10 @@ process.on('message', function(message) {
 
 module.exports = app;
 
-function addVideoToQueue(socket, queue, video) {
+function addVideoToQueue(video) {
 	getVideoInfo(video).then(q => {
-		queue = [...queue, ...q];
-		socket.emit("RefreshQueue", queue);
+		Queue = [...Queue, ...q];
+		io.emit("RefreshQueue", Queue);
 	}).catch(err => {
 		throw new Error(err);
 	})
@@ -140,19 +134,24 @@ function addVideoToQueue(socket, queue, video) {
 
 function getVideoInfo(videos) {
 	return new Promise((resolve, reject) => {
-		let queue = [];
+		let q = [];
+		let vidIds = videos.split(',');
+		for (let i of vidIds) {
+			if (checkVideoInQueue(vidIds[i])) {
+				vidIds.splice(i, 1)
+			}
+		}
+		videos = vidIds.join(',');
 		axios.get(`https://www.googleapis.com/youtube/v3/videos?id=${videos}&key=${process.env.GOOGLE_API_KEY}&part=snippet`)
 		.then(response => {
 			let result = response.data.items;
-			// console.log('get video info result:', result);
-			let vidIds = videos.split(',');
 			for (let i=0;i<result.length;i++) {
-				queue.push({
+				q.push({
 					id: vidIds[i],
 					title: result[i].snippet.title
 				});
 			}
-			resolve(queue);
+			resolve(q);
 		})
 		.catch(err => {
 			reject(err)
@@ -198,4 +197,13 @@ function searchYoutube(query) {
 		})
 	}) 
 	
+}
+
+function checkVideoInQueue(videoId) {
+	for (let v of Queue) {
+		if (v.id === videoId) {
+			return true
+		}
+	}
+	return false
 }

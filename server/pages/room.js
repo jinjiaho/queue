@@ -1,10 +1,8 @@
 import React from 'react'
-import { observer } from 'mobx-react'
-import YoutubeEmbedVideo from 'youtube-embed-video'
+// import { observer } from 'mobx-react'
 import socketIOClient from "socket.io-client"
 
 import Layout from '../components/layout'
-// import Video from '../components/video'
 import YTPlayer from '../components/yt-player'
 import QueueBox from '../components/queue-box'
 
@@ -12,23 +10,24 @@ import QueueBox from '../components/queue-box'
 
 import './page-styles.scss'
 
-import endpoint from '../constants'
+import { endpoint } from '../../constants'
 
-@observer
+// @observer
 class RoomPage extends React.Component {
     
     constructor(props) {
         super(props)
+
         this.state = {
             nowPlaying: '',
-            items: []
+            items: [],
+            address: ''
         }
 
         this.ytplayer = React.createRef()
     }
 
     nextVideo() {
-        console.log('next video');
         this.socket.emit('Next');
     }
 
@@ -38,16 +37,18 @@ class RoomPage extends React.Component {
     }
 
     componentDidMount() {
-        const endpoint = 'http://localhost:7003'
         this.socket = socketIOClient.connect(endpoint)
         
         this.socket.on("RefreshQueue", queue => {
-            console.log('queue:', queue)
             if (queue[0] && queue[0].id !== this.state.nowPlaying) {
                 this.setState({ nowPlaying: queue[0].id })
                 this.ytplayer.current.playVideo(queue[0].id)
             }
             this.setState({ items: queue });
+        })
+
+        this.socket.on("IP", function(address) {
+            this.setState({ address: address });
         })
     }
 
@@ -58,6 +59,7 @@ class RoomPage extends React.Component {
     render() {
         return (
             <Layout>
+                <div id="address">{this.state.address}</div>
                 <YTPlayer 
                     videoId={this.state.nowPlaying || 'UfsbnewzIVE'} 
                     ref={this.ytplayer}
@@ -70,3 +72,19 @@ class RoomPage extends React.Component {
 }
 
 export default RoomPage
+
+// function getIPAddress(ifaces) {
+//     let address;
+//     // Iterate over interfaces ...
+//     for (var dev in ifaces) {
+
+//         // ... and find the one that matches the criteria
+//         let iface = ifaces[dev].filter(function(details) {
+//             return details.family === 'IPv4' && details.internal === false;
+//         });
+
+//         if(iface.length > 0) address = iface[0].address;
+//     }
+
+//     return address
+// }

@@ -1,16 +1,17 @@
 import React from 'react'
-import { observer } from 'mobx-react'
+// import { observer } from 'mobx-react'
+import socketIOClient from "socket.io-client"
 import Layout from '../components/layout'
 import QueueBox from '../components/queue-box'
-import QueueItem from '../components/queue-item'
 import AddVideoForm from '../components/add-video-form'
 
 // import Queue from '../store/queue'
 
 import './page-styles.scss'
-import socketIOClient from "socket.io-client"
 
-@observer
+import { endpoint } from '../../constants'
+
+// @observer
 class RoomPage extends React.Component {
     
     constructor(props) {
@@ -26,6 +27,7 @@ class RoomPage extends React.Component {
     onVideoRequest(vidId) {
         console.log(vidId);
         this.socket.emit("AddToQueue", { vidId: vidId });
+        this.searchForm.current.clearSearchResults();
     }
 
     onSearchVideo(query) {
@@ -37,7 +39,6 @@ class RoomPage extends React.Component {
     }
 
     componentDidMount() {
-        const endpoint = 'http://localhost:7003'
         this.socket = socketIOClient.connect(endpoint)
 
         let Room = this;
@@ -65,11 +66,12 @@ class RoomPage extends React.Component {
         let nowPlaying = (this.state.items.length > 0) ? this.state.items[0].id : ''
         return (
             <Layout>
-                <QueueBox queue={this.state.items} />
+                
                 <AddVideoForm 
                     ref={this.searchForm} 
                     onClickSubmit={this.onSearchVideo.bind(this)}
                     onSelectVideo={this.onVideoRequest.bind(this)} />
+                <QueueBox queue={this.state.items} />
             </Layout>
         )
     }

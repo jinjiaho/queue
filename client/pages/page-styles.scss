@@ -5,7 +5,9 @@ $teal-light: #368F8B;
 $beige-light: #F3DFC1;
 $beige-dark: #DDBEA8;
 
-
+$breakpoints: (phone: 640px, 
+               tablet: 768px, 
+               desktop: 1024px) !default;
 body {
     margin: 0;
     font-family: sans-serif;
@@ -27,9 +29,9 @@ main {
     color: $light;
     padding: 1rem 2rem;
     min-height: calc(100vh - 7.5rem);
-    display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(40%, 1fr));
-    grid-gap: 3rem;
+    // display: grid;
+    // grid-template-columns: repeat(auto-fill, minmax(40%, 640px));
+    // grid-column-gap: 3rem;
 
     & .queue-box {
 
@@ -51,17 +53,24 @@ main {
     & #search-results {
         max-height: 50vh;
         overflow-y: auto;
+        overflow-x: hidden;
 
         & .search-result-item {
-            display: grid;
-            grid-template-columns: 30% 66%;
+            display: flex;
+            flex-wrap: wrap;
+            width: 100%;
             margin-bottom: 0.5rem;
             grid-gap: 1rem;
             cursor: pointer;
+            border: 1px solid $dark;
 
             &:hover {
                 background: $teal-dark;
-                border: 1px solid $teal-light;
+                border-color: $teal-light;
+            }
+
+            & .search-result-item-text {
+                max-width: 500px;
             }
 
             & h4 {
@@ -69,7 +78,9 @@ main {
             }
 
             & img {
-                width: 100%;
+                width: 250px;
+                margin-right: 1rem;
+                align-self: center;
             }
 
             & p {
@@ -116,5 +127,19 @@ button, input[type=submit] {
 
     &:active {
         background: lighten($teal-dark, 10%);
+    }
+}
+
+.mobile-hide {
+    display: none;
+}
+
+@media (min-width: 768px) {
+    #search-results .search-result-item {
+        flex-wrap: nowrap;
+    }
+
+    .mobile-hide {
+        display: unset;
     }
 }
