@@ -1,15 +1,18 @@
 import React from 'react'
 import { observer } from 'mobx-react'
 import YoutubeEmbedVideo from 'youtube-embed-video'
+import socketIOClient from "socket.io-client"
+
 import Layout from '../components/layout'
 // import Video from '../components/video'
+import YTPlayer from '../components/yt-player'
 import QueueBox from '../components/queue-box'
-import QueueItem from '../components/queue-item'
 
 // import Queue from '../store/queue'
 
 import './page-styles.scss'
-import socketIOClient from "socket.io-client"
+
+import endpoint from '../constants'
 
 @observer
 class RoomPage extends React.Component {
@@ -21,21 +24,12 @@ class RoomPage extends React.Component {
             items: []
         }
 
-        const endpoint = 'http://localhost:7003'
-        this.socket = socketIOClient.connect(endpoint)
-        
-        this.socket.on("RefreshQueue", data => {
-            if (data[0] && data[0].id !== this.state.nowPlaying) {
-                this.setState({ nowPlaying: data[0].id })
-            }
-            this.setState({ items: data });
-        })
-
+        this.ytplayer = React.createRef()
     }
 
-    nextSong() {
-        let currentQueue = this.state.items;
-        this.setState({ items: currentQueue.shift() });
+    nextVideo() {
+        console.log('next video');
+        this.socket.emit('Next');
     }
 
     /* Move this video to the top of the queue and play it immediately. */
@@ -44,12 +38,17 @@ class RoomPage extends React.Component {
     }
 
     componentDidMount() {
-        let iframe = document.getElementById('now-playing')
-        console.log(iframe);
-        let iframeDoc = iframe.contentDocument || iframe.contentWindow.document
-        let videoPlayer = iframeDoc.querySelectorAll('video')[0]
-        console.log(videoPlayer)
-        // videoPlayer.addEventListener('ended', this.nextSong, false);
+        const endpoint = 'http://localhost:7003'
+        this.socket = socketIOClient.connect(endpoint)
+        
+        this.socket.on("RefreshQueue", queue => {
+            console.log('queue:', queue)
+            if (queue[0] && queue[0].id !== this.state.nowPlaying) {
+                this.setState({ nowPlaying: queue[0].id })
+                this.ytplayer.current.playVideo(queue[0].id)
+            }
+            this.setState({ items: queue });
+        })
     }
 
     componentWillUnmount() {
@@ -57,10 +56,12 @@ class RoomPage extends React.Component {
     }
 
     render() {
-        // console.log(Queue.items);
         return (
             <Layout>
-                <YoutubeEmbedVideo id="now-playing" videoId={this.state.nowPlaying} autoplay />
+                <YTPlayer 
+                    videoId={this.state.nowPlaying || 'UfsbnewzIVE'} 
+                    ref={this.ytplayer}
+                    onVideoEnd={this.nextVideo.bind(this)} />
                 <QueueBox queue={this.state.items} onClickItem={this.onClickItem.bind(this)} />
             </Layout>
         )

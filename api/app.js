@@ -64,7 +64,7 @@ io.on("connection", socket => {
 		}
 	});
 
-	socket.on("NextSong", function() {
+	socket.on("Next", function() {
 		queue.shift();
 		console.log('Next Song:', queue);
 		io.emit("RefreshQueue", queue);
