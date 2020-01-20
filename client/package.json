@@ -8,8 +8,6 @@
     "start": "next start"
   },
   "dependencies": {
-    "@babel/plugin-proposal-class-properties": "^7.8.3",
-    "@babel/plugin-proposal-decorators": "^7.8.3",
     "@zeit/next-sass": "^1.0.1",
     "bootstrap": "^4.4.1",
     "cookie-parser": "~1.4.4",
@@ -22,9 +20,14 @@
     "morgan": "~1.9.1",
     "next": "^9.2.0",
     "node-sass": "^4.13.0",
+    "random-words": "^1.1.0",
     "react": "^16.12.0",
     "react-bootstrap": "^1.0.0-beta.16",
     "react-dom": "^16.12.0",
     "socket.io-client": "^2.3.0"
+  },
+  "devDependencies": {
+    "@babel/plugin-proposal-class-properties": "^7.8.3",
+    "@babel/plugin-proposal-decorators": "^7.8.3"
   }
 }

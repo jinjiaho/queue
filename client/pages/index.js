@@ -1,8 +1,12 @@
 import Layout from '../components/layout'
-import './page-styles.scss'
+import './index.scss'
 
 function HomePage() {
-  return <Layout>Welcome to Next.js!</Layout>
+  return (
+    <Layout>
+      <JoinRoomForm />
+    </Layout>
+  )
 }
 
 export default HomePage

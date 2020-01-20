@@ -1,6 +1,6 @@
 function QueueItem(props) {
   return (
-    <div className="queue-item">{props.title}</div>
+    <a onClick={e => props.onClick(props.index)} className="queue-item">{props.title}</a>
   )
 }
 
