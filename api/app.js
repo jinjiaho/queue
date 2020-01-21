@@ -6,9 +6,14 @@ var logger = require('morgan');
 const cors = require('cors');
 const axios = require('axios');
 const gracefulExit = require('express-graceful-exit');
+const redis = require('redis')
+
+const redisClient = redis.createClient()
 
 const secureEnv = require('secure-env');
 process.env = Object.assign(process.env, secureEnv({secret:'IamtheQueueadmin'}));
+
+const indexRouter = require('./routes/index.js');
 
 var app = express();
 
@@ -16,22 +21,23 @@ const http = require('http').Server(app);
 const io = require('socket.io')(http);
 io.origins('*:*');
 
-const whitelist = ['http://localhost:3000', 'http://localhost:3030'];
+const whitelist = ['http://localhost:3000'];
 
 const corsOptions = {
   credentials: true, // This is important.
   origin: (origin, callback) => {
-    // if (whitelist.includes(origin)) {
+	  console.log(origin);
+    if (whitelist.includes(origin)) {
 		return callback(null, true)
-	// }
-	// callback(new Error('Not allowed by CORS'));
+	}
+	callback(new Error('Not allowed by CORS'));
   }
 }
 
 app.use(cors(corsOptions));
 app.use(gracefulExit.middleware(app));
 
-let testQ = "TxHm_Qm4e4k,Mw7Gryt-rcc,kTzmVgGG5Bw";
+let testQ = "TxHm_Qm4e4k,Mw7Gryt-rcc,8llxefPibig";
 let Queue = []
 
 getVideoInfo(testQ).then(q => {
@@ -48,6 +54,7 @@ io.on("connection", socket => {
 
 	socket.on("AddToQueue", function(data) {
 		console.log('AddToQueue', data);
+		let roomId = data.roomId;
 		// data could potentially include url, user, etc.
 		if (data.url) {
 			let url = data.url;
@@ -59,9 +66,13 @@ io.on("connection", socket => {
 		}
 	});
 
-	socket.on("Next", function() {
+	socket.on("Next", function(data) {
 		Queue.shift();
+		let roomId = data.roomId;
 		// console.log('Next Song:', Queue);
+		clientInformation.get(`room-${roomId}`, function(err, reply) {
+			console.log(reply);
+		});
 		io.emit("RefreshQueue", Queue);
 	})
 
@@ -93,7 +104,7 @@ app.use(express.urlencoded({ extended: false }));
 app.use(cookieParser());
 app.use(express.static(path.join(__dirname, 'public')));
 
-// app.use('/', indexRouter);
+app.use('/', indexRouter);
 // app.use('/users', usersRouter);
 
 // catch 404 and forward to error handler

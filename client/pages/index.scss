@@ -33,6 +33,24 @@ main {
     display: flex;
     flex-direction: column;
     align-items: center;
+
+    & #join-room-form {
+        text-align: center;
+        
+        & .join-room-inputs {
+            display: flex;
+            align-items: center;
+            margin-bottom: 1rem;
+
+            & .dash {
+                margin-top: -0.5rem;
+            }
+
+            & input {
+                text-align: center;
+            }
+        }
+    }
 }
 
 footer {

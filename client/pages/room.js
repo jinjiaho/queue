@@ -34,7 +34,8 @@ class RoomPage extends React.Component {
 
     /* Move this video to the top of the queue and play it immediately. */
     onClickItem(index) {
-        this.socket.emit("PlayNow", index)
+        let roomId = sessionStorage.getItem('room');
+        this.socket.emit("PlayNow", { roomId: roomId, index: index })
     }
 
     componentDidMount() {
