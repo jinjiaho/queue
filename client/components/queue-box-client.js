@@ -1,4 +1,4 @@
-import QueueItem from './queue-item'
+import QueueItem from './queue-item-client'
 
 function QueueBox(props) {
   return (
