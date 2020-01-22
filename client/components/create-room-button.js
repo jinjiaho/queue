@@ -6,14 +6,22 @@ function CreateRoomButton(url) {
 }
 
 function createRoom() {
-    fetch(`${server}/create-room`).then(response => {
-        console.log(response.data);
-        // const [cookies, setCookie] = useCookies(['room'])
-        // setCookie('room', roomId, { path: '/', maxAge: 86400 })
-        window.sessionStorage.setItem('room', response)
-    }).catch(err => {
-        console.error(err);
-    })
+    let xhr = new XMLHttpRequest()
+    xhr.open('GET', `${server}/create-room`)
+    xhr.send()
+    xhr.onreadystatechange = function(e) {
+        let DONE = 4;
+        let OK = 200
+        if (xhr.readyState === DONE) {
+            if (xhr.status === OK) {
+                window.sessionStorage.setItem('room', xhr.responseText);
+                window.location.href = '/room';
+            } else {
+                console.log('Error:', xhr.status);
+                alert('Error creating room. Please try again later.');
+            }
+        }
+    }
 }
 
 export default CreateRoomButton

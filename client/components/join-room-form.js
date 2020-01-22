@@ -22,16 +22,22 @@ class JoinRoomForm extends React.Component {
 
     findRoom = (e) => {
         let roomId = `${this.state.word1.toLowerCase()}-${this.state.word2.toLowerCase()}`;
-        fetch(`http://localhost:3001/check-room-exists/${roomId}`).then(response => {
-            console.log(response);
-            // const [cookies, setCookie] = useCookies(['room'])
-            // setCookie('room', roomId, { path: '/', maxAge: 86400 })
-            // window.location.href = '/client'
-            window.sessionStorage.setItem('room', roomId);
-        }).catch(err => {
-            console.error(err);
-            this.setState({ error: err })
-        })
+        let xhr = new XMLHttpRequest();
+        xhr.open('GET', `http://localhost:3001/check-room-exists/${roomId}`)
+        xhr.send();
+        xhr.onreadystatechange = function(e) {
+            let DONE = 4;
+            let OK = 200
+            if (xhr.readyState === DONE) {
+                if (xhr.responseText === 'true') {
+                    window.sessionStorage.setItem('room', roomId);
+                    window.location.href = '/client';
+                } else {
+                    console.log('Error:', xhr.status);
+                    this.setState({ error: 'Room does not exist' })
+                }
+            }
+        }
     }
 
     render() {

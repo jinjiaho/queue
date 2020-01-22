@@ -19,7 +19,8 @@ class RoomPage extends React.Component {
         this.searchForm = React.createRef()
 
         this.state = {
-          items: []
+            inRoom: false,
+            items: []
         }
 
     }
@@ -41,16 +42,20 @@ class RoomPage extends React.Component {
     componentDidMount() {
         this.socket = socketIOClient.connect(endpoint)
 
+        if (window.sessionStorage.getItem('room')) {
+            this.socket.emit('init', { roomId: window.sessionStorage.getItem('room')})
+        }
+
         let Room = this;
         
         this.socket.on("RefreshQueue", function(data) {
-            // Queue.items = data;
-            // console.log('data:', data);
+            if (!this.state.inRoom) {
+                Room.setState({ inRoom: true });
+            }
             Room.setState({ items: data })
         })
 
         this.socket.on("FoundVideos", function(items) {
-            // console.log('items:', items)
             if (Room.searchForm.current) {
                 Room.searchForm.current.setState({ searchResults: items, searchTerms: '' });
             }

@@ -3,8 +3,8 @@ var router = express.Router();
 const randomWords = require('random-words');
 const redis = require('redis')
 
-const client = redis.createClient()
-client.on("error", function (err) {
+const redisClient = redis.createClient()
+redisClient.on("error", function (err) {
   console.log("Error " + err);
 });
 
@@ -25,13 +25,14 @@ router.get('/check-room-exists/:roomId', function(req, res, next) {
 router.get('/create-room', function(req, res, next) {
   let roomId = generateNewRoomId();
   console.log(roomId);
+  redisClient.setItem(`room-${roomId}`, JSON.stringify([]));
   res.status(200).send(roomId);
 })
 
 module.exports = router;
 
 function checkRoomExists(roomId) {
-  client.get(`room-${roomId}`, function(err, reply) {
+  redisClient.get(`room-${roomId}`, function(err, reply) {
     if (err || !reply) {
       return false;
     }

@@ -30,21 +30,22 @@ main {
     color: $light;
     padding: 1rem 2rem;
     min-height: calc(100vh - 7.5rem);
-    // display: grid;
-    // grid-template-columns: repeat(auto-fill, minmax(40%, 640px));
-    // grid-column-gap: 3rem;
 
     & .queue-box {
+        display: block;
 
         & .queue-item {
             background: $teal-dark;
             margin: 0.5rem 0;
             padding: 0.5rem;
+            display: block;
         }
     }
 
     & .search-form {
         display: flex;
+        justify-content: center;
+        margin-bottom: 1rem;
 
         & input {
             margin-right: 0.25rem;

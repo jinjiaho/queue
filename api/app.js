@@ -37,43 +37,56 @@ const corsOptions = {
 app.use(cors(corsOptions));
 app.use(gracefulExit.middleware(app));
 
-let testQ = "TxHm_Qm4e4k,Mw7Gryt-rcc,8llxefPibig";
-let Queue = []
+// let testQ = "TxHm_Qm4e4k";
+// let Queue = []
 
-getVideoInfo(testQ).then(q => {
-	Queue = q;
-	io.emit("RefreshQueue", Queue);
-}).catch(err => {
-	throw new Error(err);
-})
+// getVideoInfo(testQ).then(q => {
+// 	Queue = q;
+// 	io.emit("RefreshQueue", Queue);
+// }).catch(err => {
+// 	throw new Error(err);
+// })
 
 io.on("connection", socket => {
-	// console.log('a user connected');
-	io.emit("RefreshQueue", Queue);
-	// console.log(http.address())
+	socket.on('init', function(data) {
+		if (!data.roomId) {
+			console.error('no room id');
+		}
+		redisClient.get(`room-${data.roomId}`, function(err, reply) {
+			if (err || !reply) {
+				console.error(err || new Error(404))
+			} else {
+				io.emit('RefreshQueue', JSON.parse(reply));
+			}
+		})
+	})
 
 	socket.on("AddToQueue", function(data) {
-		console.log('AddToQueue', data);
 		let roomId = data.roomId;
-		// data could potentially include url, user, etc.
-		if (data.url) {
-			let url = data.url;
-			let vid = extractVideoId(url);
-			addVideoToQueue(vid);
-		} else if (data.vidId) {
-			let id = data.vidId;
-			addVideoToQueue(id)
-		}
+		// Get queue
+		getRoomQueue(roomId).then(reply => {
+			// data could potentially include url, user, etc.
+			let vid;
+			if (data.url) {
+				let url = data.url;
+				vid = extractVideoId(url);
+			} else if (data.vidId) {
+				vid = data.vidId;
+			}
+			addVideoToQueue(roomId, vid);
+		})
+		
 	});
 
 	socket.on("Next", function(data) {
-		Queue.shift();
 		let roomId = data.roomId;
 		// console.log('Next Song:', Queue);
-		clientInformation.get(`room-${roomId}`, function(err, reply) {
-			console.log(reply);
-		});
-		io.emit("RefreshQueue", Queue);
+		getRoomQueue(roomId).then(reply => {
+			let queue = JSON.parse(reply)
+			queue.shift();
+			redisClient.set(`room-${roomId}`, JSON.stringify(queue), redis.print);
+			io.emit('RefreshQueue', queue);
+		})
 	})
 
 	socket.on("Search", function(query) {
@@ -82,12 +95,23 @@ io.on("connection", socket => {
 		})
 	})
 
-	socket.on("PlayNow", function(index) {
-		let toPlayNow = Queue[index];
-		Queue.splice(index, 1);
-		let newQ = [toPlayNow, ...Queue.slice(1)];
-		Queue = newQ;
-		io.emit("RefreshQueue", Queue);
+	socket.on("PlayNow", function(data) {
+		if (!data.roomId) {
+			console.error('room id not provided');
+		} else {
+			let index = data.index || 0;
+			getRoomQueue(data.roomId).then(reply => {
+				let queue = JSON.parse(reply);
+				let toPlayNow = queue[index];
+				queue.splice(index, 1);
+				let newQ = [toPlayNow, ...queue.slice(1)];
+				queue = newQ;
+				redisClient.set(`room-${roomId}`, JSON.stringify(queue), redis.print);
+				io.emit("RefreshQueue", queue);
+			}).catch(err => {
+				console.error(err);
+			})
+		}	
 	})
 
 	socket.on("disconnect", () => console.log("Client disconnected"));
@@ -134,34 +158,34 @@ process.on('message', function(message) {
 
 module.exports = app;
 
-function addVideoToQueue(video) {
-	getVideoInfo(video).then(q => {
-		Queue = [...Queue, ...q];
-		io.emit("RefreshQueue", Queue);
+function addVideoToQueue(roomId, video) {
+	let queue, rId = roomId;
+	getRoomQueue(roomId).then(reply => {
+		queue = JSON.parse(reply);
+		if (!checkVideoInQueue(queue, video)) {
+			return getVideoInfo(video)
+		} else {
+			throw new Error('video already in queue');
+		}
+	}).then(q => {
+		queue = queue.concat(q);
+		redisClient.set(`room-${rId}`, JSON.stringify(queue), redis.print)
+		io.emit("RefreshQueue", queue);
 	}).catch(err => {
-		throw new Error(err);
+		throw err
 	})
 }
 
-function getVideoInfo(videos) {
+function getVideoInfo(video) {
 	return new Promise((resolve, reject) => {
 		let q = [];
-		let vidIds = videos.split(',');
-		for (let i of vidIds) {
-			if (checkVideoInQueue(vidIds[i])) {
-				vidIds.splice(i, 1)
-			}
-		}
-		videos = vidIds.join(',');
-		axios.get(`https://www.googleapis.com/youtube/v3/videos?id=${videos}&key=${process.env.GOOGLE_API_KEY}&part=snippet`)
+		axios.get(`https://www.googleapis.com/youtube/v3/videos?id=${video}&key=${process.env.GOOGLE_API_KEY}&part=snippet`)
 		.then(response => {
 			let result = response.data.items;
-			for (let i=0;i<result.length;i++) {
-				q.push({
-					id: vidIds[i],
-					title: result[i].snippet.title
-				});
-			}
+			q.push({
+				id: video,
+				title: result[0].snippet.title
+			});
 			resolve(q);
 		})
 		.catch(err => {
@@ -210,11 +234,33 @@ function searchYoutube(query) {
 	
 }
 
-function checkVideoInQueue(videoId) {
-	for (let v of Queue) {
+function checkVideoInQueue(queue, videoId) {
+	for (let v of queue) {
 		if (v.id === videoId) {
 			return true
 		}
 	}
 	return false
 }
+
+function getRoomQueue(roomId) {
+	return new Promise((resolve, reject) => {
+		redisClient.get(`room-${roomId}`, function(err, reply) {
+			if (err) {
+				reject(err);
+			}
+			if (!reply) {
+				reject(404);
+			}
+			resolve(reply);
+		})
+	})
+}
+
+// function updateRoomQueue(roomId, queue) {
+// 	return new Promise(async (resolve, reject) => {
+// 		redisClient.set(`room-${roomId}`, JSON.stringify(queue), function(res) {
+
+// 		})
+// 	})
+// }
