@@ -43,7 +43,8 @@ class RoomPage extends React.Component {
         this.socket = socketIOClient.connect(endpoint)
 
         if (window.sessionStorage.getItem('room')) {
-            this.socket.emit('init', { roomId: window.sessionStorage.getItem('room')})
+            let roomId = window.sessionStorage.getItem('room') || ''
+            this.socket.emit('init', roomId)
         }
 
         let Room = this;
