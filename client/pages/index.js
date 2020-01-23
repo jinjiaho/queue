@@ -6,7 +6,6 @@ import { server } from '../constants'
 
 function HomePage() {
   let url = `${server}/create-room`
-  console.log(url);
   return (
     <Layout>
       <JoinRoomForm />
