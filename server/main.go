@@ -1,6 +1,7 @@
 package main
 
 import (
+	"os"
 	"context"
 	"fmt"
 	"log"
@@ -11,6 +12,7 @@ import (
 	"strings"
 	"reflect"
 
+	"github.com/joho/godotenv"
     "github.com/rs/cors"
 	"github.com/gorilla/mux"
 	"github.com/gorilla/websocket"
@@ -21,8 +23,6 @@ import (
 	"go.mongodb.org/mongo-driver/bson/primitive"
 	"github.com/google/uuid"
 )
-
-const APIKey = "AIzaSyAw2xS6QMSKGL93xARLO3yX8si0nxZj--s"
 
 type QueueItem struct {
 	Title string `json:"title,omitempty" bson:"title,omitempty"`
@@ -134,6 +134,7 @@ func reader(conn *websocket.Conn) {
 				}
 			case "GetQueue":
 				room := getRoom(vals["room"])
+				queue := JSONifyQueue(room.Queue)
 				returnMessage := byteSliceReply("RefreshQueue", queue)
 				sendMessage(conn, websocket.TextMessage, returnMessage)
 			case "AddToQueue":
@@ -163,6 +164,9 @@ func reader(conn *websocket.Conn) {
 				sendMessage(conn, websocket.TextMessage, returnMessage)
 				broadcastToRoom(room.Name, returnMessage)
 			case "PlayNow":
+				// room := getRoom(vals["room"])
+				// index := vals["index"]
+				// playNext := room.Queue[index]
 
 			}
 
@@ -287,6 +291,7 @@ func sendMessage(conn *websocket.Conn, messageType int, p []byte) {
 
 func searchYouTube(query string) []SearchResult {
 	// fmt.Printf("query %v\n", query)
+	APIKey := goDotEnvVariable("GOOGLE_API_KEY")
 	url := fmt.Sprintf("https://www.googleapis.com/youtube/v3/search?part=snippet&maxResults=20&q=%v&type=video&key=%v", query, APIKey)
 	// fmt.Printf("search url %v\n", url)
 	response, err := http.Get(url)
@@ -320,6 +325,7 @@ func searchYouTube(query string) []SearchResult {
 }
 
 func getVideoInfo(vidID string) []QueueItem {
+	APIKey := goDotEnvVariable("GOOGLE_API_KEY")
 	url := fmt.Sprintf("https://www.googleapis.com/youtube/v3/videos?id=%v&key=%v&part=snippet", vidID, APIKey)
 	fmt.Printf("get video from url %v\n", url)
 	response, err := http.Get(url)
@@ -437,6 +443,20 @@ func GetRoomEndpoint(response http.ResponseWriter, request *http.Request) {
 		response.WriteHeader(http.StatusOK)
 		response.Write([]byte(roomData))
 	}
+}
+
+// use godot package to load/read the .env file and
+// return the value of the key
+func goDotEnvVariable(key string) string {
+
+  // load .env file
+  err := godotenv.Load(".env")
+
+  if err != nil {
+    log.Fatalf("Error loading .env file")
+  }
+
+  return os.Getenv(key)
 }
 
 func main() {

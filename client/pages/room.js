@@ -166,7 +166,7 @@ class RoomPage extends React.Component {
             <Layout>
                 <div className="room-name">Join this room with <strong>{this.state.room}</strong></div>
                 <br/>
-                {this.state.nowPlaying ? <div>
+                {this.state.nowPlaying.id ? <div>
                     <h2>Now playing: {this.state.nowPlaying.title}</h2>
                     <YTPlayer 
                         videoId={this.state.nowPlaying || 'UfsbnewzIVE'} 
