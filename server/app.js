@@ -4,21 +4,18 @@ var path = require('path');
 var cookieParser = require('cookie-parser');
 var logger = require('morgan');
 const cors = require('cors');
-const axios = require('axios');
 const gracefulExit = require('express-graceful-exit');
 const secureEnv = require('secure-env');
 process.env = Object.assign(process.env, secureEnv({secret:'IamtheQueueadmin'}));
 
 const indexRouter = require('./routes/index');
-const socketHandler = require('./socket');
+const socketIO = require('./socket');
 
 var app = express();
 
 const http = require('http').Server(app);
-const io = require('socket.io')(http);
-io.origins('*:*');
 
-const whitelist = ['http://localhost:3001', 'http://localhost:3000', 'https://postwoman.io'];
+const whitelist = ['http://localhost:3003', 'http://localhost:3000', 'https://postwoman.io'];
 
 const corsOptions = {
   credentials: true, // This is important.
@@ -34,7 +31,7 @@ app.set('view engine', 'ejs')
 app.use(cors(corsOptions));
 app.use(gracefulExit.middleware(app));
 
-io.on("connection", socketHandler)
+socketIO.startIo(http)
 
 http.listen(7003, function() {
 	console.log('listening on *:7003');

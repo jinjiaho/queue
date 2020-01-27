@@ -4,7 +4,7 @@ const randomWords = require('random-words');
 const db = require('../redis')
 
 router.get('/check-room-exists/:roomId', function(req, res, next) {
-  console.log('checking room', req.params.roomId, 'exists');
+  // console.log('checking room', req.params.roomId, 'exists');
   db.checkRoomExists(req.params.roomId).then(() => {
     res.status(200).end();
   }).catch(err => {
@@ -13,19 +13,21 @@ router.get('/check-room-exists/:roomId', function(req, res, next) {
 })
 
 router.get('/create-room', function(req, res, next) {
+  let room
   generateNewRoomId().then(roomId => {
-    console.log(roomId);
-    db.updateQueue(roomId, [])
-    res.status(200).send(roomId);
-  }).then(err => {
-    console.error(err)
+    room = roomId
+    return db.createRoom(roomId)
+  }).then(() => {
+    res.status(200).send(room);
+  }).catch(err => {
+    console.error(err);
     res.status(500).send(err);
   })
 })
 
 router.get('/delete-room/:roomId', function(req, res, next) {
   try {
-    db.deleteRoom(req.params.roomId);
+    db.deleteQueue(req.params.roomId);
     res.status(200).end()
   } catch(err) {
     res.status(err.code).send(err.message)

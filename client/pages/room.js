@@ -75,22 +75,18 @@ class RoomPage extends React.Component {
         let Room = this
 
         this.socket = socketIOClient.connect(endpoint)
-        
-        let roomId = window.sessionStorage.getItem('room')
-        if (roomId) {
-            this.setState({ room: window.sessionStorage.getItem('room') })
-            let clientId = window.localStorage.getItem('clientId')
-
-            this.sendMessage("register", { room: roomId, clientID: clientId })
-
-            // this.sendMessage('GetQueue', roomId)
-        }
 
         this.socket.on('registered', function(id) {
+            console.log('registered', id)
             window.localStorage.setItem('clientId', id)
+            if (this.state.items.length === 0) {
+                console.log('getting queue...');
+                this.sendMessage('GetQueue', roomId)
+            }
         })
 
         this.socket.on('RefreshQueue', function(queue) {
+            console.log('refreshing queue...', queue)
             if (queue[0] && queue[0].id !== Room.state.nowPlaying.id) {
                 Room.setState({ nowPlaying: queue[0] })
                 Room.ytplayer.current.playVideo(queue[0].id)
@@ -110,6 +106,14 @@ class RoomPage extends React.Component {
                 err.message
             );
         })
+        
+        let roomId = window.sessionStorage.getItem('room')
+        if (roomId) {
+            this.setState({ room: window.sessionStorage.getItem('room') })
+            let clientId = window.localStorage.getItem('clientId')
+
+            this.sendMessage("register", { room: roomId, clientId: clientId })
+        }
     }
 
     componentWillUnmount() {

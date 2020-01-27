@@ -6,7 +6,7 @@ module.exports = {
             axios.get(`https://www.googleapis.com/youtube/v3/videos?id=${video}&key=${process.env.GOOGLE_API_KEY}&part=snippet`)
             .then(response => {
                 let result = response.data.items;
-                console.log(result)
+                // console.log(result)
                 let q = {
                     id: video,
                     title: result[0].snippet.title

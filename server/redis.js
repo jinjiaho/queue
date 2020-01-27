@@ -9,7 +9,7 @@ redisClient.on("error", function (err) {
 module.exports = {
     checkRoomExists: function(roomId) {
         return new Promise((resolve, reject) => {
-            redisClient.get(`room-${roomId}`, function(err, reply) {
+            redisClient.get(`queue-${roomId}`, function(err, reply) {
                 if (err || !reply) {
                     reject()
                 }
@@ -17,9 +17,14 @@ module.exports = {
             })
         })
     },
+    createRoom: function(roomId) {
+        return new Promise((resolve, reject) => {
+            redisClient.set(`queue-${roomId}`, JSON.stringify([]), resolve)
+        })
+    },
     getQueue: function(roomId) {
         return new Promise((resolve, reject) => {
-            redisClient.get(`room-${roomId}`, function(err, reply) {
+            redisClient.get(`queue-${roomId}`, function(err, reply) {
                 if (err) {
                     reject(err);
                 }
@@ -33,11 +38,30 @@ module.exports = {
         })
     },
     updateQueue: function(roomId, queue) {
-        redisClient.set(`room-${roomId}`, JSON.stringify(queue), function(v) {
+        redisClient.set(`queue-${roomId}`, JSON.stringify(queue), function(v) {
             console.log('queue updated', queue)
         })
     },
-    deleteRoom: function(roomId) {
-        redisClient.del(`room-${roomId}`)
+    deleteQueue: function(roomId) {
+        redisClient.del(`queue-${roomId}`)
+    },
+    AddUsersToRoom: function(roomId, clientId) {
+        return new Promise((resolve, reject) => {
+            redisClient.get(`room-${roomId}`, function(err, reply) {
+                if (err) {
+                    reject(err)
+                }
+                if (!reply) {
+                    reject(404)
+                }
+                let clients = reply.split(',')
+                if (!clients.includes(clientId)) {
+                    clients.push(clientId)
+                    redisClient.set(`room-${roomId}`, clients,join(','), resolve)
+                } else {
+                    resolve()
+                }
+            })
+        })
     }
 }

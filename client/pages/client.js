@@ -48,23 +48,15 @@ class RoomPage extends React.Component {
         let Room = this;
 
         this.socket = socketIOClient.connect(endpoint)
-        
-        let roomId = window.sessionStorage.getItem('room')
-        console.log(roomId);
-        if (roomId) {
-            this.setState({ room: window.sessionStorage.getItem('room') })
-            let clientId = window.localStorage.getItem('clientId')
-
-            this.sendMessage("register", { room: roomId, clientID: clientId })
-
-            // this.sendMessage('GetQueue', roomId)
-        }
 
         this.socket.on("registered", function(data) {
-            window.localStorage.setItem('clientId', data)
+            if (data) {
+                window.localStorage.setItem('clientId', data)
+            }
         })
         
         this.socket.on("RefreshQueue", function(data) {
+            console.log('message received: RefreshQueue')
             if (data !== null && data !== undefined) {
                 Room.setState({ items: data })
             }
@@ -82,6 +74,17 @@ class RoomPage extends React.Component {
                 err.message
             );
         })
+        
+        let roomId = window.sessionStorage.getItem('room')
+        console.log(roomId);
+        if (roomId) {
+            this.setState({ room: window.sessionStorage.getItem('room') })
+            let clientId = window.localStorage.getItem('clientId')
+
+            this.sendMessage("register", { room: roomId, clientId: clientId })
+
+            // this.sendMessage('GetQueue', roomId)
+        }
 
     }
 
