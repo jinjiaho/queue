@@ -24,6 +24,7 @@ class RoomPage extends React.Component {
         this.state = {
             nowPlaying: {},
             items: [],
+            ws: null,
             room: null
         }
 
@@ -31,22 +32,101 @@ class RoomPage extends React.Component {
     }
 
     nextVideo() {
-        this.sendMessage('Next', { room: this.state.room });
+        this.sendMessage('Next', JSON.stringify({ room: this.state.room }));
     }
 
     /* Move this video to the top of the queue and play it immediately. */
     onClickItem(index) {
         // let roomId = sessionStorage.getItem('room');
-        this.sendMessage("PlayNow", { room: this.state.room, index: index })
+        this.sendMessage("PlayNow", JSON.stringify({ room: this.state.room, index: index }))
     }
 
-    sendMessage = (event, data) => {
+    /**
+     * @function connect
+     * This function establishes the connect with the websocket and also ensures constant reconnection if connection closes
+     */
+    connect = () => {
+        var ws = new WebSocket("ws://localhost:8080/ws");
+        let that = this; // cache the this
+        var connectInterval;
+
+        // websocket onopen event listener
+        ws.onopen = () => {
+            console.log("connected websocket main component");
+
+            this.setState({ ws: ws });
+
+            // register the client
+            this.sendMessage("register", JSON.stringify({ clientID: window.localStorage.getItem('clientId') }))
+            console.log('room', this.state.room)
+            this.sendMessage('GetQueue', JSON.stringify({ room: this.state.room }))
+
+            that.timeout = 250; // reset timer to 250 on open of websocket connection 
+            clearTimeout(connectInterval); // clear Interval on on open of websocket connection
+        };
+
+        ws.onmessage = e => {
+            let splitIndex = e.data.indexOf(' ')
+            let event = e.data.slice(0, splitIndex)
+            let data = e.data.slice(splitIndex + 1)
+            switch (event) {
+                case 'registered':
+                    window.localStorage.setItem('clientId', data)
+                    break;
+                case 'RefreshQueue':
+                    let queue = JSON.parse(data)
+                    if (!queue) {
+                        break;
+                    }
+                    if (queue[0] && queue[0].id !== this.state.nowPlaying.id) {
+                        this.setState({ nowPlaying: queue[0] })
+                        this.ytplayer.current.playVideo(queue[0].id)
+                    }
+                    this.setState({ items: queue });
+                    break;
+                case 'FoundVideos':
+                    let items = JSON.parse(data)
+                    if (this.searchForm.current) {
+                        this.searchForm.current.setState({ searchResults: items, searchTerms: '' });
+                    }
+                    break;
+            }
+        }
+
+        // websocket onclose event listener
+        ws.onclose = e => {
+            console.log(
+                `Socket is closed. Reconnect will be attempted in ${Math.min(
+                    10000 / 1000,
+                    (that.timeout + that.timeout) / 1000
+                )} second.`,
+                e.reason
+            );
+
+            that.timeout = that.timeout + that.timeout; // increment retry interval
+            connectInterval = setTimeout(this.check, Math.min(10000, that.timeout)); // call check function after timeout
+        };
+
+        // websocket onerror event listener
+        ws.onerror = err => {
+            console.error(
+                "Socket encountered error: ",
+                err.message,
+                "Closing socket"
+            );
+
+            ws.close();
+        };
+    };
+
+    sendMessage = (eventName, message) => {
         try {
-            if (this.socket) {
-                console.log('sending data:', event, data)
-                this.socket.emit(event, data);
+            if (this.state.ws) {
+                console.log('sending message:', eventName, message)
+                let msg = message ? `${eventName} ${message}` : eventName
+                this.state.ws.send(msg)
             } else {
-                console.log('socket not yet ready', event, data)
+                console.log('websocket not yet ready', eventName, message)
             }
         } catch(error) {
             console.log(error)
@@ -62,62 +142,23 @@ class RoomPage extends React.Component {
     };
 
     onVideoRequest = (vidId) => {
-        this.sendMessage("AddToQueue", { room: this.state.room, vidId: vidId });
+        this.sendMessage("AddToQueue", JSON.stringify({ room: this.state.room, vidID: vidId }));
         this.searchForm.current.clearSearchResults();
     }
 
     onSearchVideo = (query) => {
-        this.sendMessage("Search", { query });
+        this.sendMessage("Search", JSON.stringify({ query }));
     }
 
 
     componentDidMount() {
-        let Room = this
+        this.setState({ room: window.sessionStorage.getItem('room') })
 
-        this.socket = socketIOClient.connect(endpoint)
-        
-        let roomId = window.sessionStorage.getItem('room')
-        if (roomId) {
-            this.setState({ room: window.sessionStorage.getItem('room') })
-            let clientId = window.localStorage.getItem('clientId')
-
-            this.sendMessage("register", { room: roomId, clientID: clientId })
-
-            // this.sendMessage('GetQueue', roomId)
-        }
-
-        this.socket.on('registered', function(id) {
-            window.localStorage.setItem('clientId', id)
-        })
-
-        this.socket.on('RefreshQueue', function(queue) {
-            if (queue[0] && queue[0].id !== Room.state.nowPlaying.id) {
-                Room.setState({ nowPlaying: queue[0] })
-                Room.ytplayer.current.playVideo(queue[0].id)
-            }
-            Room.setState({ items: queue });
-        })
-
-        this.socket.on('FoundVideos', function(items) {
-            if (Room.searchForm.current) {
-                Room.searchForm.current.setState({ searchResults: items, searchTerms: '' });
-            }
-        })
-
-        this.socket.on("error", function(err) {
-            console.error(
-                "Socket encountered error: ",
-                err.message
-            );
-        })
+        this.connect()
     }
 
     componentWillUnmount() {
-        try {
-            this.sendMessage('disconnect', null)
-        } catch(error) {
-            console.log(error)
-        }
+        this.sendMessage("disconnect");
     }
 
     render() {
