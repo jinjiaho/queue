@@ -1,5 +1,4 @@
 import React from 'react'
-import { useCookies } from 'react-cookie'
 import { server } from '../constants'
 
 class JoinRoomForm extends React.Component {

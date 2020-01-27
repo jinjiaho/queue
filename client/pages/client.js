@@ -1,17 +1,13 @@
 import React from 'react'
-// import { observer } from 'mobx-react'
 import socketIOClient from "socket.io-client"
 import Layout from '../components/layout'
 import QueueBox from '../components/queue-box-client'
 import AddVideoForm from '../components/add-video-form'
 
-// import Queue from '../store/queue'
-
 import './client.scss'
 
 import { endpoint } from '../constants'
 
-// @observer
 class RoomPage extends React.Component {
     
     constructor(props) {

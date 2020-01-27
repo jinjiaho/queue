@@ -123,7 +123,7 @@ class RoomPage extends React.Component {
     render() {
         return (
             <Layout>
-                <div className="room-name">Join this room with <strong>{this.state.room}</strong></div>
+                <div className="room-name">Join this room with the code <strong>{this.state.room}</strong></div>
                 <br/>
                 {this.state.nowPlaying.id ? <div>
                     <h2>Now playing: {this.state.nowPlaying.title}</h2>
