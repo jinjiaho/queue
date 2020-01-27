@@ -1,5 +1,4 @@
 import { server } from '../constants'
-import { useCookies } from 'react-cookie'
 
 function CreateRoomButton(url) {
     return (<button onClick={createRoom}>Create a Room</button>)

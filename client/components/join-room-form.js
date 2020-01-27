@@ -33,12 +33,12 @@ class JoinRoomForm extends React.Component {
             let DONE = 4;
             let OK = 200
             if (xhr.readyState === DONE) {
-                if (xhr.responseText === 'OK') {
+                console.log(xhr.responseText)
+                if (xhr.status === 200) {
                     window.sessionStorage.setItem('room', roomId);
                     window.location.href = '/client';
                 } else {
-                    console.log('Error:', xhr.status);
-                    that.setState({ error: 'Room does not exist' })
+                    that.setState({ error: 'Room not found.' })
                 }
             }
         }

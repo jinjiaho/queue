@@ -20,7 +20,7 @@ class AddVideoForm extends React.Component {
     onClickSubmit = (e) => {
         e.preventDefault();
         let query = this.state.searchTerms.trim()
-        let queryEncoded = query.split(' ').join('|');
+        let queryEncoded = encodeURI(query);
         this.props.onClickSubmit(queryEncoded)
     }
 
