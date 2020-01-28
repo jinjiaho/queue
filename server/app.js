@@ -15,7 +15,7 @@ var app = express();
 
 const http = require('http').Server(app);
 
-const whitelist = ['http://localhost:3003', 'http://localhost:3000', 'https://postwoman.io'];
+const whitelist = ['http://localhost:3003', 'http://localhost:3002', 'https://postwoman.io'];
 
 const corsOptions = {
   credentials: true, // This is important.
