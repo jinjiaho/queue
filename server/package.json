@@ -18,7 +18,7 @@
     "random-words": "^1.1.0",
     "redis": "^2.8.0",
     "secure-env": "^1.2.0",
-    "socket.io": "^2.3.0",
+    "socket.io": "^2.4.0",
     "uuid": "^7.0.3"
   }
 }
